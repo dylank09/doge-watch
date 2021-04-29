@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
  * in the Google Watch Face Code Lab:
  * https://codelabs.developers.google.com/codelabs/watchface/index.html#0
  */
-public class MyWatchFace extends CanvasWatchFaceService {
+public class DogeAnalog extends CanvasWatchFaceService {
 
     /*
      * Updates rate in milliseconds for interactive mode. We update once a second to advance the
@@ -60,15 +60,15 @@ public class MyWatchFace extends CanvasWatchFaceService {
     }
 
     private static class EngineHandler extends Handler {
-        private final WeakReference<MyWatchFace.Engine> mWeakReference;
+        private final WeakReference<DogeAnalog.Engine> mWeakReference;
 
-        public EngineHandler(MyWatchFace.Engine reference) {
+        public EngineHandler(DogeAnalog.Engine reference) {
             mWeakReference = new WeakReference<>(reference);
         }
 
         @Override
         public void handleMessage(Message msg) {
-            MyWatchFace.Engine engine = mWeakReference.get();
+            DogeAnalog.Engine engine = mWeakReference.get();
             if (engine != null) {
                 switch (msg.what) {
                     case MSG_UPDATE_TIME:
@@ -123,7 +123,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
 
-            setWatchFaceStyle(new WatchFaceStyle.Builder(MyWatchFace.this)
+            setWatchFaceStyle(new WatchFaceStyle.Builder(DogeAnalog.this)
                     .setAcceptsTapEvents(true)
                     .build());
 
@@ -139,17 +139,17 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mBackgroundBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.watchface_service_bg);
 
             /* Extracts colors from background image to improve watchface style. */
-            Palette.from(mBackgroundBitmap).generate(new Palette.PaletteAsyncListener() {
-                @Override
-                public void onGenerated(Palette palette) {
-                    if (palette != null) {
-                        mWatchHandHighlightColor = palette.getVibrantColor(Color.RED);
-                        mWatchHandColor = palette.getLightVibrantColor(Color.WHITE);
-                        mWatchHandShadowColor = palette.getDarkMutedColor(Color.BLACK);
-                        updateWatchHandStyle();
-                    }
-                }
-            });
+//            Palette.from(mBackgroundBitmap).generate(new Palette.PaletteAsyncListener() {
+//                @Override
+//                public void onGenerated(Palette palette) {
+//                    if (palette != null) {
+//                        mWatchHandHighlightColor = palette.getVibrantColor(Color.RED);
+//                        mWatchHandColor = palette.getLightVibrantColor(Color.WHITE);
+//                        mWatchHandShadowColor = palette.getDarkMutedColor(Color.BLACK);
+//                        updateWatchHandStyle();
+//                    }
+//                }
+//            });
         }
 
         private void initializeWatchFace() {
@@ -465,7 +465,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             }
             mRegisteredTimeZoneReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
-            MyWatchFace.this.registerReceiver(mTimeZoneReceiver, filter);
+            DogeAnalog.this.registerReceiver(mTimeZoneReceiver, filter);
         }
 
         private void unregisterReceiver() {
@@ -473,7 +473,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 return;
             }
             mRegisteredTimeZoneReceiver = false;
-            MyWatchFace.this.unregisterReceiver(mTimeZoneReceiver);
+            DogeAnalog.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
         /**
