@@ -2,8 +2,8 @@
 <resources>
     <dimen name="digital_text_size">34dp</dimen>
     <dimen name="digital_text_size_round">38dp</dimen>
-    <dimen name="digital_text_size_secondary">18dp</dimen>
-    <dimen name="digital_text_size_round_secondary">21dp</dimen>
+    <dimen name="digital_text_size_secondary">17dp</dimen>
+    <dimen name="digital_text_size_round_secondary">19dp</dimen>
     <dimen name="digital_x_offset">21dp</dimen>
     <dimen name="digital_x_offset_round">35dp</dimen>
     <dimen name="digital_y_offset">85dp</dimen>

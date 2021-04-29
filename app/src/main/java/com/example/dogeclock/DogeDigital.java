@@ -133,7 +133,7 @@ public class DogeDigital extends CanvasWatchFaceService {
             Resources resources = DogeDigital.this.getResources();
             mYOffset = resources.getDimension(R.dimen.digital_y_offset);
 
-            mDogeCoinPrice = "0.####";
+            mDogeCoinPrice = "$0.###";
 
             // Initializes background.
             mBackgroundPaint = new Paint();
@@ -267,8 +267,9 @@ public class DogeDigital extends CanvasWatchFaceService {
                 case TAP_TYPE_TAP:
                     // The user has completed the tap gesture.
                     // TODO: Add code to handle the tap gesture.
-                    Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT)
-                            .show();
+//                    Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT)
+//                            .show();
+                    mDogeCoinPrice = "$0.###";
                     refreshDogePrice();
                     break;
             }
@@ -299,8 +300,8 @@ public class DogeDigital extends CanvasWatchFaceService {
             }
             canvas.drawText(text, xOff, mYOffset - 30, mTextPaint);
 
-            float dogeXOffset = mXOffset + 79;
-            float dogeYOffset = mYOffset + 153;
+            float dogeXOffset = mXOffset + 80;
+            float dogeYOffset = mYOffset + 155;
             canvas.drawText(mDogeCoinPrice, dogeXOffset, dogeYOffset, secondaryTextPaint);
         }
 
@@ -317,7 +318,7 @@ public class DogeDigital extends CanvasWatchFaceService {
                                 JSONObject reader = new JSONObject(response);
                                 String status = reader.getString("status");
                                 if(!status.equals("success")) {
-                                    mDogeCoinPrice = "0.####";
+                                    mDogeCoinPrice = "$0.###";
                                     return;
                                 }
 
@@ -325,18 +326,18 @@ public class DogeDigital extends CanvasWatchFaceService {
                                 JSONArray prices = data.getJSONArray("prices");
                                 JSONObject price = prices.getJSONObject(0);
 
-                                mDogeCoinPrice = price.toString().substring(10,16);
+                                mDogeCoinPrice = "$" + price.toString().substring(10,15);
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                mDogeCoinPrice = "0.####";
+                                mDogeCoinPrice = "$0.###";
                             }
 
                         }
                     }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    mDogeCoinPrice = "0.####";
+                    mDogeCoinPrice = "$0.###";
                 }
             });
 
@@ -384,8 +385,8 @@ public class DogeDigital extends CanvasWatchFaceService {
             } else if (mAmbient) {
                 canvas.drawColor(Color.BLACK);
             } else {
-                float dogeXOffset = mXOffset + 41;
-                float dogeYOffset = mYOffset + 127;
+                float dogeXOffset = mXOffset + 46;
+                float dogeYOffset = mYOffset + 130;
                 canvas.drawBitmap(mDogeCoinBitmap, dogeXOffset, dogeYOffset, mDogeCoinPaint);
             }
         }
