@@ -31,6 +31,10 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.lang.ref.WeakReference;
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -107,6 +111,7 @@ public class DogeDigital extends CanvasWatchFaceService {
         private Paint mTextPaint;
         private Bitmap mBackgroundBitmap;
         private Bitmap mDogeCoinBitmap;
+        private String mDogeCoinPrice;
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode.
@@ -127,6 +132,8 @@ public class DogeDigital extends CanvasWatchFaceService {
 
             Resources resources = DogeDigital.this.getResources();
             mYOffset = resources.getDimension(R.dimen.digital_y_offset);
+
+            mDogeCoinPrice = "0.####";
 
             // Initializes background.
             mBackgroundPaint = new Paint();
@@ -149,6 +156,8 @@ public class DogeDigital extends CanvasWatchFaceService {
             secondaryTextPaint.setAntiAlias(true);
             secondaryTextPaint.setColor(
                     ContextCompat.getColor(getApplicationContext(), R.color.digital_text_secondary));
+
+            refreshDogePrice();
         }
 
         @Override
@@ -260,6 +269,7 @@ public class DogeDigital extends CanvasWatchFaceService {
                     // TODO: Add code to handle the tap gesture.
                     Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT)
                             .show();
+                    refreshDogePrice();
                     break;
             }
             invalidate();
@@ -289,16 +299,12 @@ public class DogeDigital extends CanvasWatchFaceService {
             }
             canvas.drawText(text, xOff, mYOffset - 30, mTextPaint);
 
-
-            String dogePrice = getDogePrice();
-
             float dogeXOffset = mXOffset + 79;
             float dogeYOffset = mYOffset + 153;
-            canvas.drawText(dogePrice, dogeXOffset, dogeYOffset, secondaryTextPaint);
+            canvas.drawText(mDogeCoinPrice, dogeXOffset, dogeYOffset, secondaryTextPaint);
         }
 
-        protected String getDogePrice() {
-            final String[] result = new String[1];
+        private void refreshDogePrice() {
             RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
             String url ="https://sochain.com//api/v2/get_price/DOGE/USD";
 
@@ -307,29 +313,35 @@ public class DogeDigital extends CanvasWatchFaceService {
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
-                            // Display the first 500 characters of the response string.
-                            result[0] = response.substring(0,500);
+                            try {
+                                JSONObject reader = new JSONObject(response);
+                                String status = reader.getString("status");
+                                if(!status.equals("success")) {
+                                    mDogeCoinPrice = "0.####";
+                                    return;
+                                }
+
+                                JSONObject data = reader.getJSONObject("data");
+                                JSONArray prices = data.getJSONArray("prices");
+                                JSONObject price = prices.getJSONObject(0);
+
+                                mDogeCoinPrice = price.toString().substring(10,16);
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                mDogeCoinPrice = "0.####";
+                            }
+
                         }
                     }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    result[0] = "err";
+                    mDogeCoinPrice = "0.####";
                 }
             });
 
             // Add the request to the RequestQueue.
             queue.add(stringRequest);
-
-            String price = "";
-            String res = result[0];
-            if(res.length() > 3) {
-                int start = res.indexOf("price");
-                price = res.substring(start+9 , start+15);
-            }
-            else {
-                price = "err";
-            }
-            return price;
         }
 
         /**

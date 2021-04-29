@@ -28,6 +28,17 @@ import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.lang.ref.WeakReference;
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -130,6 +141,7 @@ public class DogeAnalog extends CanvasWatchFaceService {
         private boolean mBurnInProtection;
         private float mXOffset;
         private float mYOffset;
+        public String mDogeCoinPrice;
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -140,6 +152,8 @@ public class DogeAnalog extends CanvasWatchFaceService {
                     .build());
 
             mCalendar = Calendar.getInstance();
+
+            mDogeCoinPrice = "0.####";
 
             Resources resources = DogeAnalog.this.getResources();
             mYOffset = resources.getDimension(R.dimen.digital_y_offset);
@@ -156,6 +170,8 @@ public class DogeAnalog extends CanvasWatchFaceService {
             secondaryTextPaint.setAntiAlias(true);
             secondaryTextPaint.setColor(
                     ContextCompat.getColor(getApplicationContext(), R.color.digital_text_secondary));
+
+            refreshDogePrice();
 
         }
 
@@ -384,6 +400,7 @@ public class DogeAnalog extends CanvasWatchFaceService {
                     // TODO: Add code to handle the tap gesture.
                     Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT)
                             .show();
+                    refreshDogePrice();
                     break;
             }
             invalidate();
@@ -398,11 +415,49 @@ public class DogeAnalog extends CanvasWatchFaceService {
             drawWatchFace(canvas);
             drawDogeCoin(canvas);
 
-            String dogePrice = "0.3106";
-
             float dogeXOffset = mXOffset + 79;
             float dogeYOffset = mYOffset + 153;
-            canvas.drawText(dogePrice, dogeXOffset, dogeYOffset, secondaryTextPaint);
+            canvas.drawText(mDogeCoinPrice, dogeXOffset, dogeYOffset, secondaryTextPaint);
+        }
+
+        private void refreshDogePrice() {
+            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+            String url ="https://sochain.com//api/v2/get_price/DOGE/USD";
+
+            // Request a string response from the provided URL.
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            try {
+                                JSONObject reader = new JSONObject(response);
+                                String status = reader.getString("status");
+                                if(!status.equals("success")) {
+                                    mDogeCoinPrice = "0.####";
+                                    return;
+                                }
+
+                                JSONObject data = reader.getJSONObject("data");
+                                JSONArray prices = data.getJSONArray("prices");
+                                JSONObject price = prices.getJSONObject(0);
+
+                                mDogeCoinPrice = price.toString().substring(10,16);
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                mDogeCoinPrice = "0.####";
+                            }
+
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    mDogeCoinPrice = "0.####";
+                }
+            });
+
+            // Add the request to the RequestQueue.
+            queue.add(stringRequest);
         }
 
         private void drawBackground(Canvas canvas) {
