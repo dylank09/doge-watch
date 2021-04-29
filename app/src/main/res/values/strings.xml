@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">Doge Clock</string>
-    <string name="message">Watch face tapped</string>
-    <string name="my_analog_name">My Analog</string>
+    <string name="message">Much wow!</string>
+    <string name="my_analog_name">Doge Clock</string>
 </resources>
