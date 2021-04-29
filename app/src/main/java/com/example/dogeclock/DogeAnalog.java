@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -12,16 +13,19 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
+import androidx.core.content.ContextCompat;
 import androidx.palette.graphics.Palette;
 
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.view.SurfaceHolder;
+import android.view.WindowInsets;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
@@ -42,6 +46,9 @@ import java.util.concurrent.TimeUnit;
  * https://codelabs.developers.google.com/codelabs/watchface/index.html#0
  */
 public class DogeAnalog extends CanvasWatchFaceService {
+
+    private static final Typeface NORMAL_TYPEFACE =
+            Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
     /*
      * Updates rate in milliseconds for interactive mode. We update once a second to advance the
@@ -113,11 +120,16 @@ public class DogeAnalog extends CanvasWatchFaceService {
         private Paint mSecondPaint;
         private Paint mTickAndCirclePaint;
         private Paint mBackgroundPaint;
+        private Paint mDogeCoinPaint;
+        private Paint secondaryTextPaint;
         private Bitmap mBackgroundBitmap;
+        private Bitmap mDogeCoinBitmap;
         private Bitmap mGrayBackgroundBitmap;
         private boolean mAmbient;
         private boolean mLowBitAmbient;
         private boolean mBurnInProtection;
+        private float mXOffset;
+        private float mYOffset;
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -129,8 +141,22 @@ public class DogeAnalog extends CanvasWatchFaceService {
 
             mCalendar = Calendar.getInstance();
 
+            Resources resources = DogeAnalog.this.getResources();
+            mYOffset = resources.getDimension(R.dimen.digital_y_offset);
+
             initializeBackground();
             initializeWatchFace();
+
+            mDogeCoinPaint = new Paint();
+            mDogeCoinPaint.setColor(Color.BLACK);
+            mDogeCoinBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.watchface_doge_coin_resize);
+
+            secondaryTextPaint = new Paint();
+            secondaryTextPaint.setTypeface(NORMAL_TYPEFACE);
+            secondaryTextPaint.setAntiAlias(true);
+            secondaryTextPaint.setColor(
+                    ContextCompat.getColor(getApplicationContext(), R.color.digital_text_secondary));
+
         }
 
         private void initializeBackground() {
@@ -194,6 +220,20 @@ public class DogeAnalog extends CanvasWatchFaceService {
         }
 
         @Override
+        public void onApplyWindowInsets(WindowInsets insets) {
+            super.onApplyWindowInsets(insets);
+
+            Resources resources = DogeAnalog.this.getResources();
+            boolean isRound = insets.isRound();
+            mXOffset = resources.getDimension(isRound
+                    ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
+
+            float secondaryTextSize = resources.getDimension(isRound
+                    ? R.dimen.digital_text_size_round_secondary : R.dimen.digital_text_size_secondary);
+            secondaryTextPaint.setTextSize(secondaryTextSize);
+        }
+
+        @Override
         public void onPropertiesChanged(Bundle properties) {
             super.onPropertiesChanged(properties);
             mLowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
@@ -210,6 +250,10 @@ public class DogeAnalog extends CanvasWatchFaceService {
         public void onAmbientModeChanged(boolean inAmbientMode) {
             super.onAmbientModeChanged(inAmbientMode);
             mAmbient = inAmbientMode;
+
+            if (mLowBitAmbient) {
+                secondaryTextPaint.setAntiAlias(!inAmbientMode);
+            }
 
             updateWatchHandStyle();
 
@@ -352,6 +396,13 @@ public class DogeAnalog extends CanvasWatchFaceService {
 
             drawBackground(canvas);
             drawWatchFace(canvas);
+            drawDogeCoin(canvas);
+
+            String dogePrice = "0.3106";
+
+            float dogeXOffset = mXOffset + 79;
+            float dogeYOffset = mYOffset + 153;
+            canvas.drawText(dogePrice, dogeXOffset, dogeYOffset, secondaryTextPaint);
         }
 
         private void drawBackground(Canvas canvas) {
@@ -504,6 +555,19 @@ public class DogeAnalog extends CanvasWatchFaceService {
                 long delayMs = INTERACTIVE_UPDATE_RATE_MS
                         - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
                 mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
+            }
+        }
+
+        private void drawDogeCoin(Canvas canvas) {
+
+            if (mAmbient && (mLowBitAmbient || mBurnInProtection)) {
+                canvas.drawColor(Color.BLACK);
+            } else if (mAmbient) {
+                canvas.drawColor(Color.BLACK);
+            } else {
+                float dogeXOffset = mXOffset + 41;
+                float dogeYOffset = mYOffset + 127;
+                canvas.drawBitmap(mDogeCoinBitmap, dogeXOffset, dogeYOffset, mDogeCoinPaint);
             }
         }
     }

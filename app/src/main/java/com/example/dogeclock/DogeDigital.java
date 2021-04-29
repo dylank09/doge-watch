@@ -24,6 +24,13 @@ import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
 import java.lang.ref.WeakReference;
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -96,10 +103,10 @@ public class DogeDigital extends CanvasWatchFaceService {
         private float mYOffset;
         private Paint mBackgroundPaint;
         private Paint mDogeCoinPaint;
+        private Paint secondaryTextPaint;
+        private Paint mTextPaint;
         private Bitmap mBackgroundBitmap;
         private Bitmap mDogeCoinBitmap;
-        private Paint mTextPaint;
-        private Paint secondaryTextPaint;
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode.
@@ -273,20 +280,56 @@ public class DogeDigital extends CanvasWatchFaceService {
             if(mAmbient) {
                 text = String.format("%d:%02d", mCalendar.get(Calendar.HOUR),
                         mCalendar.get(Calendar.MINUTE));
-                xOff = mXOffset + 40;
+                xOff = mXOffset + 47;
             }
             else {
                 text = String.format("%d:%02d:%02d", mCalendar.get(Calendar.HOUR),
                         mCalendar.get(Calendar.MINUTE), mCalendar.get(Calendar.SECOND));
-                xOff = mXOffset;
+                xOff = mXOffset + 15;
             }
-            canvas.drawText(text, xOff, mYOffset, mTextPaint);
+            canvas.drawText(text, xOff, mYOffset - 30, mTextPaint);
 
-            String dogePrice = "0.30";
 
-            float dogeXOffset = mXOffset + 82;
-            float dogeYOffset = mYOffset + 160;
+            String dogePrice = getDogePrice();
+
+            float dogeXOffset = mXOffset + 79;
+            float dogeYOffset = mYOffset + 153;
             canvas.drawText(dogePrice, dogeXOffset, dogeYOffset, secondaryTextPaint);
+        }
+
+        protected String getDogePrice() {
+            final String[] result = new String[1];
+            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+            String url ="https://sochain.com//api/v2/get_price/DOGE/USD";
+
+            // Request a string response from the provided URL.
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            // Display the first 500 characters of the response string.
+                            result[0] = response.substring(0,500);
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    result[0] = "err";
+                }
+            });
+
+            // Add the request to the RequestQueue.
+            queue.add(stringRequest);
+
+            String price = "";
+            String res = result[0];
+            if(res.length() > 3) {
+                int start = res.indexOf("price");
+                price = res.substring(start+9 , start+15);
+            }
+            else {
+                price = "err";
+            }
+            return price;
         }
 
         /**
@@ -324,14 +367,13 @@ public class DogeDigital extends CanvasWatchFaceService {
 
         private void drawDogeCoin(Canvas canvas) {
 
-            float dogeXOffset = mXOffset + 38;
-            float dogeYOffset = mYOffset + 127;
-
             if (mAmbient && (mLowBitAmbient || mBurnInProtection)) {
                 canvas.drawColor(Color.BLACK);
             } else if (mAmbient) {
                 canvas.drawColor(Color.BLACK);
             } else {
+                float dogeXOffset = mXOffset + 41;
+                float dogeYOffset = mYOffset + 127;
                 canvas.drawBitmap(mDogeCoinBitmap, dogeXOffset, dogeYOffset, mDogeCoinPaint);
             }
         }
